@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import copy
 from matplotlib import pyplot as plt
 
 
@@ -9,14 +10,15 @@ IMGR_PATH = './images/d.jpeg'
 WIN_SIZE = 7
 DSR = 30
 K = 16
+SCALAR = 1
 
 class main():
     def __init__(self):
         self.img_l = cv.imread(IMGL_PATH,0)
         # self.img_l = np.resize(self.img_l,())
         self.img_r = cv.imread(IMGR_PATH,0)
-        # self.img_l = cv.resize(self.img_l,(self.img_l.shape[1] // 4,self.img_l.shape[0] // 4),interpolation=cv.INTER_CUBIC)
-        # self.img_r = cv.resize(self.img_r,(self.img_r.shape[1] // 4,self.img_r.shape[0] // 4),interpolation=cv.INTER_CUBIC)
+        self.img_l = cv.resize(self.img_l,(self.img_l.shape[1] // SCALAR,self.img_l.shape[0] // SCALAR),interpolation=cv.INTER_CUBIC)
+        self.img_r = cv.resize(self.img_r,(self.img_r.shape[1] // SCALAR,self.img_r.shape[0] // SCALAR),interpolation=cv.INTER_CUBIC)
 
 
     def subKernel(self,kernel_l,kernel_r):
@@ -55,37 +57,54 @@ class main():
 
     def show(self,disparity):
         output = np.zeros([disparity.shape[0], disparity.shape[1], 3])
+        print(output.shape)
+        mask1 = np.where(disparity == 0)
+        output[mask1[0] , mask1[1]] = [0,0,50]
 
-        for row in range(disparity.shape[0]):
-            for col in range(disparity.shape[1]):
-                color = disparity[row][col]
-                if color <= 51:
-                    output[row][col][0] = 255
-                    output[row][col][1] = color * 5
-                    continue
+        mask2 = np.where((disparity < 0.1) & (disparity > 0))
+        output[mask2[0], mask2[1]] = [0, 0, 100]
 
-                if color <= 102:
-                    color -= 51
-                    output[row][col][0] = 255 - color * 5
-                    output[row][col][1] = 255
-                    continue
+        mask3 = np.where((disparity > 0.1) & (disparity < 0.2))
+        output[mask3[0],mask3[1]] = [0,0,150]
 
-                if color <= 153:
-                    color -= 102
-                    output[row][col][1] = 255
-                    output[row][col][2] = color * 5
-                    continue
+        mask4 = np.where((disparity > 0.2) & (disparity < 0.3))
+        output[mask4[0] , mask4[1]] = [0,0,200]
 
-                if color <= 204:
-                    color -= 153
-                    output[row][col][1] = 255 - int(128.0 * color / 51.0 + 0.5)
-                    output[row][col][2] = 255
-                    continue
-
-                else:
-                    color -= 204
-                    output[row][col][1] = 127 - int(128.0 * color / 51.0 + 0.5)
-                    output[row][col][2] = 255
+        mask5 = np.where((disparity > 0.3) & (disparity < 0.4))
+        output[mask5[0], mask5[1]] = [0, 0, 250]
+        # output[mask1[0] , mask1[1] , 1] = 0
+        # output[mask1[0] , mask1[1] , 2] = 50
+        # print(output[a])
+        # for row in range(disparity.shape[0]):
+        #     for col in range(disparity.shape[1]):
+        #         color = disparity[row][col]
+        #         if color <= 51:
+        #             output[row][col][0] = 255
+        #             output[row][col][1] = color * 5
+        #             continue
+        #
+        #         if color <= 102:
+        #             color -= 51
+        #             output[row][col][0] = 255 - color * 5
+        #             output[row][col][1] = 255
+        #             continue
+        #
+        #         if color <= 153:
+        #             color -= 102
+        #             output[row][col][1] = 255
+        #             output[row][col][2] = color * 5
+        #             continue
+        #
+        #         if color <= 204:
+        #             color -= 153
+        #             output[row][col][1] = 255 - int(128.0 * color / 51.0 + 0.5)
+        #             output[row][col][2] = 255
+        #             continue
+        #
+        #         else:
+        #             color -= 204
+        #             output[row][col][1] = 127 - int(128.0 * color / 51.0 + 0.5)
+        #             output[row][col][2] = 255
 
         cv.imshow("test", output)
         cv.waitKey()
